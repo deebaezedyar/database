@@ -1,0 +1,20 @@
+--Question 1 : simple query : get all the contacts from Anchorage, display the columns contact email, firstname and city ordered by contact_firstname
+select * from contacts where contact_city ilike 'Anchorage';
+
+
+--Question 2 : intermediate query : find all the teachers who haven't taught at all, return the teacher email addresses, in ascending order
+select teacher_epita_email from teachers 
+where teacher_epita_email not in (select distinct session_prof_ref from sessions)
+order by teacher_epita_email asc;
+
+
+
+-- Question 3 : harder query : compute the absence rate per student and per course, ordered by student epita_email ascending, course name ascending and absence rate descending
+select attendance_student_ref,attendance_course_ref,cast(round(cast(absent as decimal)*100/ totalAttendance,2) as varchar)|| '%' as absence_ratio From (
+select attendance_student_ref,attendance_population_year_ref,attendance_course_ref,attendance_course_rev, sum(case when status='Present' then 1 else 0 end) as present,
+ sum(case when status='Absent' then 1 else 0 end) as absent,count(*) as totalAttendance from (
+SELECT attendance_student_ref, attendance_population_year_ref, attendance_course_ref, attendance_course_rev, 
+        attendance_session_date_ref, attendance_session_start_time, attendance_session_end_time, case when attendance_presence=1 then 'Present' else 'Absent' end status
+FROM public.attendance) as t
+group by attendance_student_ref,attendance_population_year_ref,attendance_course_ref,attendance_course_rev
+order by attendance_student_ref,attendance_population_year_ref,attendance_course_ref) as R
